@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Main lanes test the PRODUCT install: core + embeddings only. The
+  # experimental nebula extra (umap/hdbscan → numba/llvmlite) is
+  # quarantined to its own non-blocking job below so its fragile
+  # dependency stack can never break a release or a paying customer's
+  # install signal.
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install (product surface — no nebula)
+        run: pip install -e ".[embeddings]" pytest
+      - name: Test
+        run: pytest tests/ -q
+
+  # Windows lane — blocking as of issue #2 (cross-platform CLI fixes:
+  # UTF-8 stdio, USERPROFILE-aware home redirection in tests). Tests the
+  # same product surface as the main lanes (no nebula).
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (product surface — no nebula)
+        run: pip install -e ".[embeddings]" pytest
+      - name: Test
+        run: pytest tests/ -q
+
+  # Experimental: nebula visualization (3D galaxy). Non-blocking by
+  # design — umap/hdbscan/numba are pinned to older interpreters and
+  # fragile wheels. Failure here never gates a merge.
+  test-nebula:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (with experimental nebula extra)
+        run: pip install -e ".[embeddings,nebula]" pytest
+      - name: Test
+        run: pytest tests/ -q
