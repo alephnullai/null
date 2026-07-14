@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Main lanes test the PRODUCT install: core + embeddings only. The
+  # experimental nebula extra (umap/hdbscan → numba/llvmlite) is
+  # quarantined to its own non-blocking job below so its fragile
+  # dependency stack can never break a release or a paying customer's
+  # install signal.
+  # OS coverage is where the real bugs live (Windows encoding/path — issue
+  # #2/#3 — and macOS specifics), so all three OSes run the floor version
+  # 3.11. The Python axis is far more redundant for pure-Python code, so a
+  # single 3.12 canary on ubuntu guards against a version-specific
+  # regression without paying 2x on every OS. Windows is a blocking lane
+  # (issue #2). 4 lanes total.
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11"]
+        include:
+          - os: ubuntu-latest
+            python: "3.12"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install (product surface — no nebula)
+        run: pip install -e ".[embeddings]" pytest
+      - name: Test
+        run: pytest tests/ -q
+
+  # Experimental: nebula visualization (3D galaxy). Non-blocking by
+  # design — umap/hdbscan/numba are pinned to older interpreters and
+  # fragile wheels. Failure here never gates a merge.
+  test-nebula:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (with experimental nebula extra)
+        run: pip install -e ".[embeddings,nebula]" pytest
+      - name: Test
+        run: pytest tests/ -q

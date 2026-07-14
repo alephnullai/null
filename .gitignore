@@ -1,0 +1,29 @@
+.env*
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.null/
+
+# Frontend build artifacts
+nebula-web/node_modules/
+nebula-web/dist/
+nebula-web/tsconfig.tsbuildinfo
+
+# Backup / pollution artifacts
+*.polluted_bak
+
+# Coverage artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Atlas/Pete handoff scratch — roadmap docs that live only in the working
+# tree. Pre-release verification runs from a clean clone where these are
+# absent, so they never ship in a built package.
+ATLAS_HANDOFF_NEXT_SESSION.md
+ALEPH-NULL_NEXT_STEPS.md
+.aleph/
+PUBLIC_LAUNCH_AUDIT.md
+docs/internal/
