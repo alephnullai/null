@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Null daemon launchd agent (Phase 7.1).
+
+  Generated from this template by `null daemon install`. Placeholders:
+    {{PYTHON}}     — absolute path to the Python that has null_memory installed
+    {{NULL_DIR}}   — typically ~/.null
+    {{LOG_PATH}}   — typically ~/.null/daemon.log
+
+  Loaded under the user's launchd domain at login. RunAtLoad=true so
+  it starts immediately. KeepAlive=true so it auto-restarts on crash.
+
+  To inspect: launchctl print gui/$(id -u)/com.nullmemory.daemon
+  To unload : launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.nullmemory.daemon.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nullmemory.daemon</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{PYTHON}}</string>
+        <string>-m</string>
+        <string>null_memory.cli</string>
+        <string>daemon</string>
+        <string>run</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>NULL_DIR</key>
+        <string>{{NULL_DIR}}</string>
+        <key>HYPNOS_LIVE_ENABLED</key>
+        <string>1</string>
+        <key>HYPNOS_LIVE_DRYRUN</key>
+        <string>0</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>{{LOG_PATH}}</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{LOG_PATH}}</string>
+
+    <key>WorkingDirectory</key>
+    <string>{{NULL_DIR}}</string>
+</dict>
+</plist>
